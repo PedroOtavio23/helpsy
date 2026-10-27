@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d5c26">
+  <meta name="robots" content="noindex">
+  <title>Painel administrativo · Helpsy</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7f4; --surface: #fff; --text: #14261a; --muted: #52645a; --line: #d6e2d9;
+      --brand: #16963e; --accent: #127a33; --accent-strong: #0d5c26; --accent-soft: #e2f3e7;
+      --sun: #f3c14b; --warning-soft: #fbf0d6; --danger: #b3261e; --danger-soft: #fbe4e2;
+      --display: "Bricolage Grotesque", system-ui, sans-serif; --body: "Figtree", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--body); }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: var(--accent); }
+    :focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+    h1, h2, h3 { font-family: var(--display); line-height: 1.15; margin: 0; }
+    h1 { font-size: clamp(1.6rem, 3vw, 2rem); }
+    h2 { font-size: 1.2rem; }
+    p { margin: 0; }
+    .muted { color: var(--muted); } .small { font-size: .86rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 15px; border: 1.5px solid var(--accent); border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700; text-decoration: none; line-height: 1.2; }
+    .btn:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+    .btn.secondary { background: var(--surface); color: var(--text); border-color: var(--line); }
+    .btn.secondary:hover { border-color: var(--accent); }
+    .btn.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+    .btn.danger:hover { background: var(--danger-soft); }
+    .btn.sm { padding: 5px 11px; font-size: .84rem; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+    .stack { display: grid; gap: 14px; }
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .between { justify-content: space-between; }
+    .field { display: grid; gap: 4px; min-width: 0; }
+    .field label { font-weight: 700; font-size: .86rem; }
+    .field input, .field select, .field textarea { width: 100%; padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: var(--text); }
+    .notice { padding: 11px 14px; border-radius: 10px; background: var(--accent-soft); }
+    .notice.error { background: var(--danger-soft); color: #8f1d18; }
+    .notice.warn { background: var(--warning-soft); }
+    .chip { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: .78rem; font-weight: 600; background: var(--accent-soft); color: var(--accent-strong); margin: 2px 2px 0 0; }
+    .status { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: .78rem; font-weight: 700; background: var(--bg); white-space: nowrap; }
+    .status.confirmada, .status.ativo { background: var(--accent-soft); color: var(--accent); }
+    .status.cancelada, .status.falta, .status.suspenso { background: var(--danger-soft); color: #8f1d18; }
+    .status.realizada { background: #e6ecfb; color: #2b3f8f; }
+    .status.remarcada { background: var(--warning-soft); color: #6b4c00; }
+
+    /* Login */
+    .login { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--brand); }
+    .login .card { width: min(420px, 100%); padding: 26px; }
+    .login img { width: 170px; margin: 0 auto 6px; display: block; }
+
+    /* Layout do painel */
+    .shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100dvh; }
+    .side { background: var(--accent-strong); color: #fff; padding: 20px 14px; display: flex; flex-direction: column; gap: 18px; position: sticky; top: 0; height: 100dvh; }
+    .side .brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+    .side .brand img { width: 74px; }
+    .side .brand b { font: 700 1.1rem var(--display); display: block; }
+    .side .brand small { font-size: .7rem; letter-spacing: .1em; opacity: .8; }
+    .menu { display: grid; gap: 4px; }
+    .menu button { display: flex; justify-content: space-between; align-items: center; border: 0; background: transparent; color: #ffffffd0; text-align: left; padding: 9px 12px; border-radius: 10px; font-weight: 600; }
+    .menu button:hover { background: #ffffff18; color: #fff; }
+    .menu button[aria-current="page"] { background: #fff; color: var(--accent-strong); }
+    .count { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 99px; background: var(--sun); color: #3b2b00; font-size: .75rem; display: inline-grid; place-items: center; }
+    .side .foot { margin-top: auto; display: grid; gap: 8px; font-size: .85rem; }
+    .side .foot a, .side .foot button { color: #fff; background: none; border: 1px solid #ffffff40; border-radius: 999px; padding: 7px 12px; text-decoration: none; text-align: center; }
+    main { padding: 26px clamp(16px, 3vw, 34px) 60px; display: grid; gap: 18px; align-content: start; min-width: 0; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+    .kpi b { display: block; font: 700 2rem/1.1 var(--display); color: var(--accent-strong); }
+    .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; align-items: start; }
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; align-items: end; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); white-space: nowrap; }
+    tr:last-child td { border-bottom: 0; }
+    .bars { display: grid; gap: 9px; }
+    .bar { display: grid; grid-template-columns: minmax(110px, 160px) 1fr 30px; gap: 10px; align-items: center; font-size: .88rem; }
+    .bar .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar div { height: 12px; border-radius: 99px; background: var(--accent-soft); overflow: hidden; }
+    .bar div span { display: block; height: 100%; background: var(--brand); border-radius: 99px; }
+    .pending { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+    .log p { padding: 7px 0; border-bottom: 1px solid var(--line); font-size: .88rem; }
+    .log p:last-child { border-bottom: 0; }
+    .empty { text-align: center; color: var(--muted); padding: 24px 10px; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; padding: 10px 18px; border-radius: 999px; z-index: 50; max-width: calc(100% - 32px); text-align: center; }
+    dialog { border: 0; border-radius: 16px; padding: 22px; width: min(460px, calc(100% - 32px)); box-shadow: 0 20px 60px #14261a40; }
+    dialog::backdrop { background: #14261a80; }
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: minmax(0, 1fr); }
+      .side { min-width: 0; }
+      .side { position: static; height: auto; padding: 12px 16px; gap: 10px; }
+      .menu { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 4px; }
+      .menu button { flex: none; gap: 6px; }
+      .side .foot { margin: 0; display: flex; flex-wrap: wrap; }
+      .side .brand img { width: 56px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <div id="toastRoot" aria-live="polite"></div>
+  <dialog id="dlg"></dialog>
+
+<script src="data.js"></script>
+<script>
+(() => {
+  "use strict";
+  const H = window.Helpsy;
+  // Acesso de demonstração (protótipo sem servidor). Num sistema real, o login do admin fica no servidor.
+  const ADMIN = { email: "admin@helpsy.com", pass: "helpsy2026" };
+  const ADMIN_SESSION = "helpsy:admin-session";
+
+  let db = H.load();
+  const ui = { tab: "geral", q: "", status: "", pro: "", proQ: "", studentQ: "" };
+
+  const $ = (s) => document.querySelector(s);
+  const e = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const pad = (n) => String(n).padStart(2, "0");
+  const allPros = () => H.allPros(db, true);
+  const proById = (id) => allPros().find((p) => p.id === Number(id));
+  const proName = (p) => p ? `${p.title} ${p.name}` : "—";
+  const isHidden = (p) => (db.hiddenPros || []).includes(p.id);
+  const modeLabel = (m) => m === "online" ? "On-line" : "Presencial";
+  const dateLabel = (iso) => { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m-1, d, 12).toLocaleDateString("pt-BR", { day:"2-digit", month:"short", year:"numeric" }).replace(/\./g, ""); };
+  const ageOf = (birth) => birth ? Math.floor((Date.now() - new Date(birth + "T12:00").getTime()) / 31557600000) : null;
+  const save = () => H.save(db);
+  const log = (t) => { db.audit.push(`${new Date().toLocaleString("pt-BR")} — ${t}`); };
+  const notify = (to, text) => db.notifications.unshift({ id: db.nextId++, to, text, read: false, at: new Date().toISOString() });
+  const statusTag = (s) => `<span class="status ${e(s)}">${e(s)}</span>`;
+  const btn = (label, action, data = {}, cls = "btn") => `<button type="button" class="${cls}" data-action="${action}" ${Object.entries(data).map(([k,v]) => `data-${k}="${e(v)}"`).join(" ")}>${label}</button>`;
+  const empty = (t) => `<p class="empty">${t}</p>`;
+
+  function loggedIn() { try { return sessionStorage.getItem(ADMIN_SESSION) === "1"; } catch (err) { return window.__adm === true; } }
+  function setLogged(v) { try { v ? sessionStorage.setItem(ADMIN_SESSION, "1") : sessionStorage.removeItem(ADMIN_SESSION); } catch (err) { window.__adm = v; } }
+
+  let toastTimer;
+  function toast(m) { $("#toastRoot").innerHTML = `<div class="toast" role="status">${e(m)}</div>`; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("#toastRoot").innerHTML = ""; }, 3000); }
+  function download(name, content, type) {
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  const csv = (rows) => "﻿" + rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
+
+  /* ---------- Login ---------- */
+  function loginView() {
+    return `<div class="login"><form class="card stack" id="loginForm" novalidate>
+      <img src="assets/logo-verde.png" alt="Helpsy — Psicologia Escolar">
+      <div style="text-align:center"><h1 style="font-size:1.5rem">Painel administrativo</h1><p class="muted small">Acesso restrito à equipe Helpsy</p></div>
+      <div class="field"><label for="admEmail">E-mail</label><input id="admEmail" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="admPass">Senha</label><input id="admPass" type="password" autocomplete="current-password" required></div>
+      <p id="admErr" class="notice error" role="alert" hidden></p>
+      <button class="btn" type="submit">Entrar</button>
+      <p class="notice warn small">Protótipo: use <strong>admin@helpsy.com</strong> e a senha <strong>helpsy2026</strong>. Em produção, este acesso precisa ser validado em servidor.</p>
+      <a class="small" href="./" style="text-align:center">← Voltar ao site</a>
+    </form></div>`;
+  }
+
+  /* ---------- Seções ---------- */
+  const SECTIONS = [
+    ["geral", "Visão geral"], ["pendentes", "Cadastros pendentes"], ["profissionais", "Profissionais"],
+    ["consultas", "Consultas"], ["alunos", "Alunos"], ["avisos", "Avisos"], ["registro", "Registro de ações"]
+  ];
+  const adminNotes = () => db.notifications.filter((n) => n.to === "admin");
+  function counts() { return { pendentes: db.pending.length, avisos: adminNotes().filter((n) => !n.read).length }; }
+
+  const views = {};
+  views.geral = () => {
+    const b = db.bookings;
+    const pros = allPros();
+    const per = pros.map((p) => [p, b.filter((x) => x.professionalId === p.id && x.status !== "cancelada" && x.status !== "remarcada").length]).sort((a, c) => c[1] - a[1]);
+    const max = Math.max(1, ...per.map((x) => x[1]));
+    const areaCount = {}; H.AREAS.forEach((a) => { areaCount[a] = 0; });
+    b.filter((x) => x.status !== "cancelada" && x.status !== "remarcada").forEach((x) => { const p = proById(x.professionalId); if (p) p.areas.forEach((a) => { areaCount[a] = (areaCount[a] || 0) + 1; }); });
+    const maxA = Math.max(1, ...Object.values(areaCount));
+    return `<div class="row between"><div><h1>Visão geral</h1><p class="muted">Dados de demonstração salvos neste navegador.</p></div>${btn("Atualizar","refresh",{},"btn secondary sm")}</div>
+      ${db.pending.length ? `<div class="notice warn row between"><span><strong>${db.pending.length}</strong> cadastro(s) profissional(is) aguardando análise.</span>${btn("Analisar agora","tab",{tab:"pendentes"},"btn sm")}</div>` : ""}
+      <div class="kpis">
+        <div class="card kpi"><b>${db.users.length}</b><span class="muted">alunos cadastrados</span></div>
+        <div class="card kpi"><b>${pros.filter((p) => !isHidden(p)).length}</b><span class="muted">profissionais ativos</span></div>
+        <div class="card kpi"><b>${b.filter((x) => x.status === "confirmada").length}</b><span class="muted">consultas confirmadas</span></div>
+        <div class="card kpi"><b>${b.filter((x) => x.status === "realizada").length}</b><span class="muted">realizadas</span></div>
+        <div class="card kpi"><b>${b.filter((x) => x.status === "cancelada").length}</b><span class="muted">cancelamentos</span></div>
+      </div>
+      <div class="grid2">
+        <section class="card stack"><h2>Consultas por profissional</h2>${b.length ? `<div class="bars">${per.map(([p, n]) => `<div class="bar"><span class="lbl" title="${e(proName(p))}">${e(proName(p))}</span><div><span style="width:${(n / max) * 100}%"></span></div><b>${n}</b></div>`).join("")}</div>` : empty("Ainda não há consultas de alunos.")}</section>
+        <section class="card stack"><h2>Procura por tema</h2>${b.length ? `<div class="bars">${Object.entries(areaCount).sort((a, c) => c[1] - a[1]).map(([a, n]) => `<div class="bar"><span class="lbl" title="${e(a)}">${e(a)}</span><div><span style="width:${(n / maxA) * 100}%"></span></div><b>${n}</b></div>`).join("")}</div>` : empty("Os temas aparecem quando houver consultas.")}</section>
+      </div>
+      <section class="card stack"><div class="row between"><h2>Atividade recente</h2>${btn("Ver tudo","tab",{tab:"registro"},"btn secondary sm")}</div><div class="log">${db.audit.length ? db.audit.slice(-6).reverse().map((x) => `<p>${e(x)}</p>`).join("") : empty("Nenhuma ação registrada.")}</div></section>`;
+  };
+
+  views.pendentes = () => `<div><h1>Cadastros pendentes</h1><p class="muted">Confira o CRP no site do Conselho antes de aprovar. Perfis aprovados aparecem no catálogo na hora.</p></div>
+    <section class="card stack">${db.pending.length ? db.pending.map((it, i) => `<article class="pending">
+      <div class="row between"><div><h2>${e(it.name)}</h2><p class="small muted">${e(it.crp)} · ${e(it.email || "sem e-mail")} · enviado em ${e(it.date)}</p></div><div class="row">${btn("Aprovar","approve",{index:i},"btn sm")}${btn("Recusar","reject",{index:i},"btn danger sm")}</div></div>
+      <p class="small"><strong>Formação:</strong> ${e(it.training)}${it.modes && it.modes.length ? ` · <strong>Modalidade:</strong> ${it.modes.map(modeLabel).join(" e ")}` : ""}</p>
+      <div>${(it.areas || []).map((a) => `<span class="chip">${e(a)}</span>`).join("")}</div>
+      ${it.bio ? `<p class="small muted">${e(it.bio)}</p>` : ""}
+    </article>`).join("") : empty("Nenhum cadastro aguardando análise.")}</section>`;
+
+  views.profissionais = () => {
+    const q = ui.proQ.toLowerCase();
+    const list = allPros().filter((p) => !q || `${p.name} ${p.crp} ${p.areas.join(" ")}`.toLowerCase().includes(q));
+    return `<div class="row between"><div><h1>Profissionais</h1><p class="muted">Suspenda um perfil para tirá-lo do catálogo sem apagar o histórico.</p></div>${btn("Exportar CSV","export-pros",{},"btn secondary sm")}</div>
+      <div class="card filters"><div class="field"><label for="proQ">Buscar</label><input id="proQ" type="search" value="${e(ui.proQ)}" placeholder="Nome, CRP ou tema"></div></div>
+      <section class="card table-wrap">${list.length ? `<table><thead><tr><th>Profissional</th><th>Temas</th><th>Modalidade</th><th>Consultas</th><th>Status</th><th></th></tr></thead><tbody>${list.map((p) => {
+        const n = db.bookings.filter((b) => b.professionalId === p.id && b.status === "confirmada").length;
+        const hid = isHidden(p);
+        return `<tr><td><strong>${e(proName(p))}</strong><br><span class="small muted">${e(p.crp)}</span></td><td>${p.areas.map((a) => `<span class="chip">${e(a)}</span>`).join("")}</td><td>${p.modes.map(modeLabel).join(", ")}</td><td>${n}</td><td>${statusTag(hid ? "suspenso" : "ativo")}</td><td>${hid ? btn("Reativar","toggle-pro",{id:p.id},"btn secondary sm") : btn("Suspender","toggle-pro",{id:p.id},"btn danger sm")}</td></tr>`;
+      }).join("")}</tbody></table>` : empty("Nenhum profissional encontrado.")}</section>`;
+  };
+
+  function filteredBookings() {
+    const q = ui.q.toLowerCase();
+    return db.bookings.filter((b) => (!ui.status || b.status === ui.status) && (!ui.pro || b.professionalId === Number(ui.pro)) &&
+      (!q || `${b.studentName} ${b.studentEmail} ${proName(proById(b.professionalId))}`.toLowerCase().includes(q)))
+      .sort((a, c) => (c.date + c.time).localeCompare(a.date + a.time));
+  }
+  views.consultas = () => {
+    const list = filteredBookings();
+    return `<div class="row between"><div><h1>Consultas</h1><p class="muted">Todas as consultas agendadas por alunos no site.</p></div>${btn("Exportar CSV","export-bookings",{},"btn secondary sm")}</div>
+      <div class="card filters">
+        <div class="field"><label for="bq">Buscar</label><input id="bq" type="search" value="${e(ui.q)}" placeholder="Aluno ou profissional"></div>
+        <div class="field"><label for="bs">Status</label><select id="bs"><option value="">Todos</option>${["confirmada","realizada","falta","remarcada","cancelada"].map((s) => `<option ${ui.status === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
+        <div class="field"><label for="bp">Profissional</label><select id="bp"><option value="">Todos</option>${allPros().map((p) => `<option value="${p.id}" ${Number(ui.pro) === p.id ? "selected" : ""}>${e(proName(p))}</option>`).join("")}</select></div>
+      </div>
+      <p class="small muted" aria-live="polite">${list.length} consulta(s)</p>
+      <section class="card table-wrap">${list.length ? `<table><thead><tr><th>Data</th><th>Aluno</th><th>Profissional</th><th>Modalidade</th><th>Status</th><th></th></tr></thead><tbody>${list.map((b) => `<tr><td>${e(dateLabel(b.date))}<br><span class="small muted">${e(b.time)}</span></td><td>${e(b.studentName)}<br><span class="small muted">${e(b.studentEmail)}</span></td><td>${e(proName(proById(b.professionalId)))}</td><td>${modeLabel(b.mode)}</td><td>${statusTag(b.status)}</td><td>${b.status === "confirmada" ? btn("Cancelar","cancel-booking",{id:b.id},"btn danger sm") : ""}</td></tr>`).join("")}</tbody></table>` : empty("Nenhuma consulta com esses filtros.")}</section>`;
+  };
+
+  views.alunos = () => {
+    const q = ui.studentQ.toLowerCase();
+    const list = db.users.filter((u) => !q || `${u.name} ${u.email} ${u.school || ""}`.toLowerCase().includes(q));
+    return `<div class="row between"><div><h1>Alunos</h1><p class="muted">Somente dados de cadastro. Nenhuma informação clínica é exibida aqui.</p></div>${btn("Exportar CSV","export-students",{},"btn secondary sm")}</div>
+      <div class="card filters"><div class="field"><label for="sq">Buscar</label><input id="sq" type="search" value="${e(ui.studentQ)}" placeholder="Nome, e-mail ou escola"></div></div>
+      <section class="card table-wrap">${list.length ? `<table><thead><tr><th>Aluno</th><th>Escola</th><th>Idade</th><th>Responsável</th><th>Consultas</th><th>Cadastro</th></tr></thead><tbody>${list.map((u) => {
+        const age = ageOf(u.birth); const n = db.bookings.filter((b) => b.studentEmail === u.email && b.status !== "cancelada").length;
+        return `<tr><td><strong>${e(u.name)}</strong><br><span class="small muted">${e(u.email)}</span></td><td>${e(u.school || "—")}</td><td>${age ?? "—"}</td><td>${u.guardian ? `${e(u.guardian.name)}<br><span class="small muted">${e(u.guardian.email)}</span>` : "—"}</td><td>${n}</td><td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString("pt-BR") : "—"}</td></tr>`;
+      }).join("")}</tbody></table>` : empty(db.users.length ? "Nenhum aluno encontrado." : "Nenhum aluno cadastrado ainda. Os cadastros feitos no site aparecem aqui.")}</section>`;
+  };
+
+  views.avisos = () => {
+    const list = adminNotes();
+    return `<div class="row between"><h1>Avisos</h1>${list.length ? btn("Marcar todos como lidos","read-all",{},"btn secondary sm") : ""}</div>
+      <section class="card log">${list.length ? list.map((n) => `<p style="${n.read ? "" : "font-weight:700"}">${e(n.text)} <span class="small muted">— ${new Date(n.at).toLocaleString("pt-BR")}</span></p>`).join("") : empty("Nenhum aviso.")}</section>`;
+  };
+
+  views.registro = () => `<div class="row between"><h1>Registro de ações</h1>${db.audit.length ? btn("Exportar","export-log",{},"btn secondary sm") : ""}</div>
+    <section class="card log">${db.audit.length ? db.audit.slice().reverse().map((x) => `<p>${e(x)}</p>`).join("") : empty("Nenhuma ação registrada.")}</section>`;
+
+  /* ---------- Render ---------- */
+  function render() {
+    const root = $("#root");
+    if (!loggedIn()) { document.title = "Entrar · Painel Helpsy"; root.innerHTML = loginView(); $("#admEmail").focus(); return; }
+    const c = counts();
+    const active = document.activeElement && document.activeElement.id;
+    root.innerHTML = `<div class="shell">
+      <aside class="side">
+        <a class="brand" href="./" style="color:#fff;text-decoration:none"><img src="assets/marca-branca.png" alt=""><span><b>HELPSY</b><small>ADMINISTRAÇÃO</small></span></a>
+        <nav class="menu" aria-label="Seções do painel">${SECTIONS.map(([id, l]) => `<button data-action="tab" data-tab="${id}" ${ui.tab === id ? 'aria-current="page"' : ""}><span>${l}</span>${c[id] ? `<span class="count">${c[id]}</span>` : ""}</button>`).join("")}</nav>
+        <div class="foot"><a href="./" target="_blank" rel="noopener">Abrir o site ↗</a><button data-action="logout">Sair</button></div>
+      </aside>
+      <main id="main" tabindex="-1">${views[ui.tab]()}</main>
+    </div>`;
+    document.title = `${SECTIONS.find((s) => s[0] === ui.tab)[1]} · Painel Helpsy`;
+    if (active && $("#" + active) && /^(bq|proQ|sq)$/.test(active)) { const el = $("#" + active); el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }
+
+  function openDialog(html, onSubmit) {
+    const d = $("#dlg"); d.innerHTML = `<form method="dialog" class="stack" id="dlgForm">${html}</form>`;
+    d.showModal();
+    $("#dlgForm").addEventListener("submit", (ev) => { if (ev.submitter && ev.submitter.value === "ok") onSubmit(new FormData(ev.target)); });
+  }
+
+  /* ---------- Ações ---------- */
+  document.addEventListener("click", (ev) => {
+    const t = ev.target.closest("[data-action]"); if (!t) return;
+    const { action, ...d } = t.dataset;
+    switch (action) {
+      case "tab": ui.tab = d.tab; render(); window.scrollTo(0, 0); $("#main") && $("#main").focus({ preventScroll: true }); break;
+      case "refresh": db = H.load(); render(); toast("Dados atualizados."); break;
+      case "logout": setLogged(false); render(); break;
+      case "approve": {
+        const it = db.pending[Number(d.index)]; if (!it) break;
+        const days = [["1","Seg"],["2","Ter"],["3","Qua"],["4","Qui"],["5","Sex"]];
+        openDialog(`<h2>Aprovar ${e(it.name)}</h2><p class="small muted">Defina a agenda inicial. O profissional poderá ajustá-la depois.</p>
+          <fieldset class="field" style="border:0;padding:0"><legend style="font-weight:700;font-size:.86rem">Dias de atendimento</legend><div class="row">${days.map(([v, l]) => `<label><input type="checkbox" name="days" value="${v}" ${["1","3","5"].includes(v) ? "checked" : ""}> ${l}</label>`).join("")}</div></fieldset>
+          <div class="field"><label for="dlgTimes">Horários (separados por vírgula)</label><input id="dlgTimes" name="times" value="14:00, 15:00, 16:00"></div>
+          <div class="row" style="justify-content:flex-end"><button class="btn secondary" value="cancel">Voltar</button><button class="btn" value="ok">Aprovar e publicar</button></div>`, (fd) => {
+          const daysSel = fd.getAll("days").map(Number);
+          const times = String(fd.get("times") || "").split(",").map((x) => x.trim()).filter((x) => /^\d{1,2}:\d{2}$/.test(x)).map((x) => x.padStart(5, "0")).sort();
+          if (!daysSel.length || !times.length) { toast("Informe pelo menos um dia e um horário válido (ex.: 14:00)."); return; }
+          const idx = db.pending.indexOf(it); if (idx < 0) return;
+          db.pending.splice(idx, 1);
+          const id = Math.max(...allPros().map((p) => p.id)) + 1;
+          db.extraPros.push({ id, title: "Psi.", name: it.name, crp: it.crp, training: it.training, areas: it.areas && it.areas.length ? it.areas : ["Estresse escolar"], modes: it.modes && it.modes.length ? it.modes : ["online"], location: "", bio: it.bio || "Perfil recém-aprovado.", days: daysSel, times });
+          log(`Cadastro de ${it.name} aprovado.`); save(); render(); toast("Aprovado — o perfil já aparece no catálogo.");
+        });
+        break;
+      }
+      case "reject": {
+        const it = db.pending[Number(d.index)]; if (!it) break;
+        openDialog(`<h2>Recusar ${e(it.name)}</h2><div class="field"><label for="dlgWhy">Motivo (registrado no histórico)</label><select id="dlgWhy" name="why"><option>CRP não encontrado ou inválido</option><option>Dados incompletos</option><option>Fora do perfil da plataforma</option><option>Outro</option></select></div>
+          <div class="row" style="justify-content:flex-end"><button class="btn secondary" value="cancel">Voltar</button><button class="btn danger" value="ok">Recusar cadastro</button></div>`, (fd) => {
+          const idx = db.pending.indexOf(it); if (idx < 0) return;
+          db.pending.splice(idx, 1); log(`Cadastro de ${it.name} recusado (${fd.get("why")}).`); save(); render(); toast("Cadastro recusado.");
+        });
+        break;
+      }
+      case "toggle-pro": {
+        const p = proById(d.id); if (!p) break;
+        db.hiddenPros = db.hiddenPros || [];
+        if (isHidden(p)) { db.hiddenPros = db.hiddenPros.filter((x) => x !== p.id); log(`${proName(p)} reativado(a) no catálogo.`); toast("Perfil reativado."); }
+        else {
+          if (!confirm(`Suspender ${proName(p)}? O perfil sai do catálogo; consultas já marcadas continuam valendo.`)) break;
+          db.hiddenPros.push(p.id); log(`${proName(p)} suspenso(a) do catálogo.`); toast("Perfil suspenso.");
+        }
+        save(); render(); break;
+      }
+      case "cancel-booking": {
+        const b = db.bookings.find((x) => x.id === d.id); if (!b || b.status !== "confirmada") break;
+        const p = proById(b.professionalId);
+        if (!confirm(`Cancelar a consulta de ${b.studentName} com ${proName(p)} em ${dateLabel(b.date)} às ${b.time}?`)) break;
+        b.status = "cancelada";
+        notify(b.studentEmail, `A equipe Helpsy cancelou sua consulta de ${dateLabel(b.date)} às ${b.time} com ${proName(p)}. Você pode agendar outro horário.`);
+        notify(`psi:${b.professionalId}`, `A administração cancelou a consulta de ${b.studentName} em ${dateLabel(b.date)} às ${b.time}.`);
+        log(`Administração cancelou consulta de ${b.studentName} com ${proName(p)}.`); save(); render(); toast("Consulta cancelada e aluno avisado."); break;
+      }
+      case "read-all": adminNotes().forEach((n) => { n.read = true; }); save(); render(); break;
+      case "export-bookings":
+        download("consultas-helpsy.csv", csv([["Data","Horário","Aluno","E-mail","Profissional","Modalidade","Status"]].concat(filteredBookings().map((b) => [b.date, b.time, b.studentName, b.studentEmail, proName(proById(b.professionalId)), modeLabel(b.mode), b.status]))), "text/csv"); break;
+      case "export-students":
+        download("alunos-helpsy.csv", csv([["Nome","E-mail","Escola","Nascimento","Responsável","E-mail do responsável","Cadastro"]].concat(db.users.map((u) => [u.name, u.email, u.school, u.birth, u.guardian && u.guardian.name, u.guardian && u.guardian.email, u.createdAt]))), "text/csv"); break;
+      case "export-pros":
+        download("profissionais-helpsy.csv", csv([["Nome","CRP","Formação","Temas","Modalidade","Status"]].concat(allPros().map((p) => [proName(p), p.crp, p.training, p.areas.join(", "), p.modes.map(modeLabel).join(", "), isHidden(p) ? "suspenso" : "ativo"]))), "text/csv"); break;
+      case "export-log": download("registro-helpsy.txt", db.audit.join("\n"), "text/plain"); break;
+    }
+  });
+
+  document.addEventListener("input", (ev) => {
+    const map = { bq: "q", proQ: "proQ", sq: "studentQ" };
+    if (map[ev.target.id]) { ui[map[ev.target.id]] = ev.target.value; render(); }
+  });
+  document.addEventListener("change", (ev) => {
+    if (ev.target.id === "bs") { ui.status = ev.target.value; render(); }
+    if (ev.target.id === "bp") { ui.pro = ev.target.value; render(); }
+  });
+  document.addEventListener("submit", (ev) => {
+    if (ev.target.id !== "loginForm") return;
+    ev.preventDefault();
+    const email = $("#admEmail").value.trim().toLowerCase(), pass = $("#admPass").value;
+    if (email !== ADMIN.email || pass !== ADMIN.pass) { const el = $("#admErr"); el.hidden = false; el.textContent = "E-mail ou senha incorretos."; return; }
+    setLogged(true); db = H.load(); render();
+  });
+  // Mantém o painel em sincronia com o site aberto em outra aba
+  window.addEventListener("storage", (ev) => { if (ev.key === H.STORE_KEY && loggedIn() && !$("#dlg").open) { db = H.load(); render(); } });
+
+  render();
+})();
+</script>
+</body>
+</html>

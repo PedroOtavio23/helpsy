@@ -56,7 +56,7 @@
     .nav .badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 4px; border-radius: 99px; background: var(--danger); color: #fff; font-size: .72rem; }
     .menu-toggle { display: none; border: 1.5px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 12px; font-weight: 700; }
     .user-chip { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--muted); }
-    .emergency { padding: 11px 16px; background: var(--warning-soft); border-radius: 12px; margin-bottom: 20px; font-size: .93rem; }
+    .emergency { flex-basis: 100%; padding: 12px 16px; background: var(--warning-soft); border-radius: 12px; font-size: .93rem; }
     .emergency a { color: inherit; font-weight: 700; }
     h1, h2, h3 { font-family: var(--display); line-height: 1.15; margin: 0; }
     h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
@@ -144,7 +144,7 @@
     details { border-bottom: 1px solid var(--line); padding: 10px 0; }
     details:last-child { border-bottom: 0; }
     summary { cursor: pointer; font-weight: 700; }
-    .footer { border-top: 1px solid var(--line); margin-top: 20px; padding: 28px 0 90px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 18px; }
+    .footer { border-top: 1px solid var(--line); margin-top: 20px; padding: 24px 0 90px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 18px; }
     .footer img { height: 70px; width: auto; }
     .footer nav { display: flex; gap: 14px; flex-wrap: wrap; }
     .toast { position: fixed; bottom: 82px; left: 50%; transform: translateX(-50%); background: var(--text); color: white; padding: 10px 18px; border-radius: 999px; z-index: 60; max-width: calc(100% - 32px); text-align: center; }
@@ -194,58 +194,34 @@
       <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="mainNav">Menu</button>
       <nav class="nav" id="mainNav" aria-label="Navegação principal"></nav>
     </header>
-    <aside class="emergency"><strong>Importante:</strong> o Helpsy não é um serviço de emergência. Em uma crise, procure um adulto de confiança. No Brasil, o CVV atende pelo <a href="tel:188">188</a> (24h, gratuito) e emergências médicas pelo SAMU, <a href="tel:192">192</a>.</aside>
-    <main id="app" tabindex="-1"></main>
+    <main id="app" tabindex="-1" style="padding-top:8px"></main>
     <footer class="footer">
       <div class="stack" style="gap:8px">
         <img src="assets/logo-verde.png" alt="Helpsy — Psicologia Escolar" width="89" height="70">
         <p class="small muted">Protótipo acadêmico. Os profissionais e horários são fictícios.</p>
       </div>
       <div class="stack" style="gap:10px">
-        <nav aria-label="Links do rodapé"><a href="#/ajuda/privacidade">Privacidade</a><a href="#/ajuda/termos">Termos de uso</a><a href="#/ajuda/faq">Perguntas frequentes</a></nav>
+        <nav aria-label="Links do rodapé"><a href="#/ajuda/privacidade">Privacidade</a><a href="#/ajuda/termos">Termos de uso</a><a href="#/ajuda/faq">Perguntas frequentes</a><a href="admin.html">Área administrativa</a></nav>
         <button class="btn ghost small" data-action="reset-demo" style="justify-self:start;padding-inline:0">Restaurar dados da demonstração</button>
       </div>
+      <aside class="emergency" aria-label="Aviso de emergência"><strong>Importante:</strong> o Helpsy não é um serviço de emergência. Em uma crise, procure um adulto de confiança. No Brasil, o CVV atende pelo <a href="tel:188">188</a> (24h, gratuito) e emergências médicas pelo SAMU, <a href="tel:192">192</a>.</aside>
     </footer>
   </div>
   <div id="chatRoot"></div>
   <div id="toastRoot" aria-live="polite"></div>
 
+<script src="data.js"></script>
 <script>
 (() => {
   "use strict";
 
-  /* ---------- Dados base (fictícios) ---------- */
-  const BASE_PROFESSIONALS = [
-    { id: 1, title: "Dra.", name: "Marina Teixeira", crp: "CRP demonstrativo 00/00001", training: "Terapia Cognitivo-Comportamental", areas: ["Ansiedade", "Estresse escolar"], modes: ["online"], location: "", bio: "Acompanho estudantes que sentem pressão com provas, notas e escolhas, com escuta acolhedora e sem julgamentos.", days: [1,2,3,4,5], times: ["09:00","10:00","14:00","15:00"] },
-    { id: 2, title: "Dr.", name: "Rafael Almeida", crp: "CRP demonstrativo 00/00002", training: "Orientação profissional", areas: ["Orientação vocacional", "Atenção e estudos"], modes: ["presencial"], location: "Centro (local demonstrativo)", bio: "Ajudo adolescentes a organizar interesses, rotina de estudos e decisões sobre curso e carreira.", days: [1,3,5], times: ["13:00","14:00","15:00","16:00"] },
-    { id: 3, title: "Dra.", name: "Beatriz Nogueira", crp: "CRP demonstrativo 00/00003", training: "Psicologia Clínica", areas: ["Luto", "Autoestima"], modes: ["online","presencial"], location: "Zona Sul (local demonstrativo)", bio: "Atendimento acolhedor para quem passou por perdas ou está buscando apoio para lidar com mudanças.", days: [2,4], times: ["18:00","19:00","20:00"] },
-    { id: 4, title: "Dr.", name: "Caio Mendes", crp: "CRP demonstrativo 00/00004", training: "Neuropsicologia", areas: ["Atenção e estudos", "Estresse escolar"], modes: ["online"], location: "", bio: "Foco em concentração, organização e rotina de estudos, respeitando o ritmo de cada pessoa.", days: [1,2,3,4,5], times: ["08:00","09:00","10:00","11:00"] },
-    { id: 5, title: "Dra.", name: "Larissa Prado", crp: "CRP demonstrativo 00/00005", training: "Psicologia Escolar", areas: ["Bullying e convivência", "Autoestima"], modes: ["online"], location: "", bio: "Apoio para questões de convivência escolar, amizades e situações de bullying.", days: [2,3,4], times: ["15:00","16:00","17:00","18:00"] },
-    { id: 6, title: "Dra.", name: "Helena Ribeiro", crp: "CRP demonstrativo 00/00006", training: "Psicologia de crianças e adolescentes", areas: ["Ansiedade", "Bullying e convivência"], modes: ["presencial"], location: "Centro (local demonstrativo)", bio: "Atendimento de crianças e adolescentes, com participação de responsáveis quando necessário.", days: [1,2,4], times: ["08:00","09:00","10:00"] }
-  ];
-  const AREAS = ["Ansiedade","Autoestima","Atenção e estudos","Bullying e convivência","Estresse escolar","Luto","Orientação vocacional"];
+  /* ---------- Dados (compartilhados em data.js) ---------- */
+  const { BASE_PROFESSIONALS, AREAS, STORE_KEY, freshData } = window.Helpsy;
   const DEMO_STUDENT = { email: "aluno@demo.helpsy", name: "Aluno(a) Demonstração" };
-  const STORE_KEY = "helpsy:v2";
   const SESSION_MIN = 50;
-
-  const freshData = () => ({
-    users: [], session: null, bookings: [], blocked: [], notifications: [],
-    pending: [
-      { name: "Paulo Siqueira", crp: "CRP demonstrativo 00/00007", email: "paulo@exemplo.com", training: "Psicologia Escolar", areas: ["Estresse escolar"], bio: "Atendimento focado em adaptação escolar e rotina de estudos.", date: "21/10/2026" },
-      { name: "Joana Farias", crp: "CRP demonstrativo 00/00008", email: "joana@exemplo.com", training: "Psicologia Clínica", areas: ["Autoestima", "Ansiedade"], bio: "Escuta acolhedora para adolescentes que enfrentam inseguranças.", date: "22/10/2026" }
-    ],
-    extraPros: [], audit: [], nextId: 100
-  });
-
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw) return Object.assign(freshData(), JSON.parse(raw));
-    } catch (err) { /* armazenamento indisponível */ }
-    return freshData();
-  }
-  let db = load();
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (err) { /* ignora */ } }
+  let db = window.Helpsy.load();
+  if (db.session && db.session.role === "admin") db.session = null; // admin agora fica em admin.html
+  function save() { window.Helpsy.save(db); }
 
   // Estado só da tela (não salvo)
   const ui = {
@@ -257,8 +233,8 @@
   /* ---------- Utilidades ---------- */
   const $ = (sel) => document.querySelector(sel);
   const e = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-  const allPros = () => BASE_PROFESSIONALS.concat(db.extraPros);
-  const proById = (id) => allPros().find((p) => p.id === Number(id));
+  const allPros = () => window.Helpsy.allPros(db);
+  const proById = (id) => window.Helpsy.allPros(db, true).find((p) => p.id === Number(id));
   const proName = (p) => `${p.title} ${p.name}`;
   const modeLabel = (m) => m === "online" ? "On-line" : "Presencial";
   const pad = (n) => String(n).padStart(2, "0");
@@ -305,7 +281,7 @@
   function notify(to, text) { db.notifications.unshift({ id: db.nextId++, to, text, read: false, at: new Date().toISOString() }); }
   const myNotifications = () => {
     const s = session(); if (!s) return [];
-    const key = s.role === "psi" ? `psi:${s.proId}` : s.role === "admin" ? "admin" : s.email;
+    const key = s.role === "psi" ? `psi:${s.proId}` : s.email;
     return db.notifications.filter((n) => n.to === key);
   };
   const unreadCount = () => myNotifications().filter((n) => !n.read).length;
@@ -315,12 +291,7 @@
   };
   function log(text) { db.audit.push(`${new Date().toLocaleString("pt-BR")} — ${text}`); }
 
-  async function hash(text) {
-    try {
-      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-      return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2,"0")).join("");
-    } catch (err) { return "plain:" + btoa(unescape(encodeURIComponent(text))); }
-  }
+  const hash = window.Helpsy.hash;
 
   function download(filename, content, type) {
     const blob = new Blob([content], { type });
@@ -367,7 +338,7 @@
     return { name: parts[0] || "", param: parts[1] || "" };
   }
   const go = (path) => { if (location.hash === "#/" + path) render(); else location.hash = "#/" + path; };
-  const ACCESS = { aluno: ["painel","consultas","avisos","conta"], psi: ["psi","agenda-psi","avisos"], admin: ["admin"] };
+  const ACCESS = { aluno: ["painel","consultas","avisos","conta"], psi: ["psi","agenda-psi","avisos"] };
   function guard(name) {
     for (const [r, routes] of Object.entries(ACCESS)) {
       if (routes.includes(name) && !(name === "avisos" && role()) && role() !== r) return r;
@@ -380,7 +351,6 @@
     const n = unreadCount(); const badge = n ? `<span class="badge" aria-label="${n} não lidos">${n}</span>` : "";
     if (role() === "aluno") return [["painel","Início"],["psicologos","Psicólogos"],["consultas","Minhas consultas"],["avisos","Avisos"+badge],["ajuda","Ajuda"]];
     if (role() === "psi") return [["psi","Resumo"],["agenda-psi","Agenda"],["avisos","Avisos"+badge]];
-    if (role() === "admin") return [["admin","Painel"],["psicologos","Catálogo"]];
     return [["","Início"],["psicologos","Psicólogos"],["cadastro-psicologo","Sou psicólogo"],["ajuda","Ajuda"],["entrar","Entrar"]];
   }
 
@@ -615,17 +585,6 @@
       <article class="card"><div class="days">${daysHTML}</div></article></section>`;
   };
 
-  /* --- Admin --- */
-  views.admin = () => {
-    const mine = db.bookings;
-    return `<section class="page">${head("Painel administrativo","Visão geral","Dados de demonstração salvos neste navegador.")}
-    <div class="kpis"><div class="card kpi"><b>${db.users.length}</b><span class="muted">alunos cadastrados</span></div><div class="card kpi"><b>${allPros().length}</b><span class="muted">profissionais</span></div><div class="card kpi"><b>${mine.filter((b) => b.status === "confirmada").length}</b><span class="muted">consultas confirmadas</span></div><div class="card kpi"><b>${mine.filter((b) => b.status === "cancelada").length}</b><span class="muted">cancelamentos</span></div></div>
-    <article class="card stack"><h3>Cadastros profissionais aguardando análise</h3>${db.pending.length ? `<div class="list">${db.pending.map((it,i) => `<div class="list-item"><div><strong>${e(it.name)}</strong><p class="small muted">${e(it.crp)} · ${e(it.training)} · enviado em ${e(it.date)}</p><div class="meta">${(it.areas || []).map((a) => `<span class="chip">${e(a)}</span>`).join("")}</div></div><div class="actions">${btn("Aprovar","review",{index:i,decision:"aprovado"},"btn small")}${btn("Recusar","review",{index:i,decision:"recusado"},"btn danger small")}</div></div>`).join("")}</div>` : '<p class="muted">Nenhum cadastro pendente.</p>'}</article>
-    <article class="card stack"><div class="week-nav"><h3>Consultas agendadas por alunos</h3>${mine.length ? btn("Exportar CSV","export-csv",{},"btn secondary small") : ""}</div>
-      ${mine.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Aluno</th><th>Profissional</th><th>Data</th><th>Modalidade</th><th>Status</th></tr></thead><tbody>${mine.slice().reverse().map((b) => { const p = proById(b.professionalId); return `<tr><td>${e(b.studentName)}</td><td>${p ? e(proName(p)) : "—"}</td><td>${e(dateLabel(b.date))} ${b.time}</td><td>${modeLabel(b.mode)}</td><td>${statusTag(b.status)}</td></tr>`; }).join("")}</tbody></table></div>` : '<p class="muted">Nenhuma consulta feita por alunos ainda.</p>'}</article>
-    <article class="card stack"><h3>Registro de ações</h3>${db.audit.length ? db.audit.slice().reverse().slice(0,30).map((x) => `<p class="small">${e(x)}</p>`).join("") : '<p class="muted">Nenhuma ação registrada.</p>'}</article></section>`;
-  };
-
   /* --- Ajuda --- */
   const INFO = {
     faq: [["Preciso pagar para me cadastrar?","Não. O cadastro e as consultas são gratuitos."],["Como cancelo ou remarco?","Em “Minhas consultas”, use os botões “Cancelar” ou “Remarcar” ao lado da consulta."],["Consigo colocar a consulta na agenda do celular?","Sim. Em “Minhas consultas”, baixe o arquivo .ics ou adicione direto ao Google Agenda."],["O Helpsy atende emergências?","Não. Em uma emergência, procure ajuda presencial, ligue para o CVV (188) ou para o SAMU (192)."],["A assistente virtual é psicóloga?","Não. Ela ajuda com navegação e agendamento, mas não faz diagnóstico nem indica tratamento."],["Os profissionais são reais?","Não. Os perfis deste protótipo são fictícios."]],
@@ -669,7 +628,7 @@
     renderChat();
   }
   function renderRoles() {
-    const roles = [["","Visitante"],["aluno","Aluno"],["psi","Psicólogo"],["admin","Administrador"]];
+    const roles = [["","Visitante"],["aluno","Aluno"],["psi","Psicólogo"]];
     $("#demoRoles").innerHTML = roles.map(([r,l]) => `<button data-action="role" data-role="${r}" aria-pressed="${(role() || "") === r}">${l}</button>`).join("");
   }
   let toastTimer;
@@ -684,13 +643,11 @@
     const back = ui.returnTo; ui.returnTo = null;
     if (sessionObj.role === "aluno") go(back || "painel");
     else if (sessionObj.role === "psi") go("psi");
-    else if (sessionObj.role === "admin") go("admin");
   }
   function setRole(r) {
     ui.menuOpen = false;
     if (r === "aluno") login({ role:"aluno", ...DEMO_STUDENT }, true);
     else if (r === "psi") login({ role:"psi", name:"Dra. Marina Teixeira", proId: 1 }, true);
-    else if (r === "admin") login({ role:"admin", name:"Administração" }, true);
     else { db.session = null; save(); go(""); }
   }
 
@@ -827,19 +784,6 @@
         b.status = d.status; notify(b.studentEmail, `${proName(proById(b.professionalId))} marcou sua consulta de ${dateLabel(b.date)} como “${d.status}”.`);
         save(); toast(`Consulta marcada como ${d.status}.`); render(); break;
       }
-      case "review": {
-        const it = db.pending.splice(Number(d.index), 1)[0]; if (!it) break;
-        if (d.decision === "aprovado") {
-          const id = Math.max(...allPros().map((p) => p.id)) + 1;
-          db.extraPros.push({ id, title:"Psi.", name:it.name, crp:it.crp, training:it.training, areas: it.areas && it.areas.length ? it.areas : ["Estresse escolar"], modes: it.modes && it.modes.length ? it.modes : ["online"], location:"", bio: it.bio || "Perfil recém-aprovado.", days:[1,3,5], times:["14:00","15:00","16:00"] });
-          buildSamples();
-        }
-        log(`Cadastro de ${it.name} ${d.decision}.`); save(); toast(d.decision === "aprovado" ? "Aprovado — o perfil já aparece no catálogo." : "Cadastro recusado."); render(); break;
-      }
-      case "export-csv": {
-        const rows = [["Aluno","E-mail","Profissional","Data","Horário","Modalidade","Status"]].concat(db.bookings.map((b) => [b.studentName, b.studentEmail, proName(proById(b.professionalId) || {title:"",name:"—"}), b.date, b.time, modeLabel(b.mode), b.status]));
-        download("consultas-helpsy.csv", "﻿" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g,'""')}"`).join(";")).join("\n"), "text/csv"); break;
-      }
       case "export-me": {
         const user = db.users.find((u) => u.email === s.email) || { name:s.name, email:s.email };
         const { hash: _h, ...safeUser } = user;
@@ -941,7 +885,7 @@
     render();
     if (name) $("#app").focus({ preventScroll: true });
   });
-  window.addEventListener("storage", (ev) => { if (ev.key === STORE_KEY) { db = load(); buildSamples(); render(); } });
+  window.addEventListener("storage", (ev) => { if (ev.key === STORE_KEY) { db = window.Helpsy.load(); if (db.session && db.session.role === "admin") db.session = null; buildSamples(); render(); } });
 
   buildSamples();
   render();

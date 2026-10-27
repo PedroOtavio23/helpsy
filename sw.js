@@ -1,7 +1,7 @@
 // Cache simples para o Helpsy abrir mesmo sem internet.
-const CACHE = "helpsy-v2";
+const CACHE = "helpsy-v3";
 const FILES = [
-  "./", "./index.html", "./manifest.webmanifest",
+  "./", "./index.html", "./admin.html", "./data.js", "./manifest.webmanifest",
   "./assets/marca-verde.png", "./assets/marca-branca.png", "./assets/logo-verde.png", "./assets/logo-branco.png",
   "./assets/favicon.png", "./assets/icon-192.png", "./assets/icon-512.png"
 ];
