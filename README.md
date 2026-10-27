@@ -7,7 +7,7 @@ Site: https://pedrootavio23.github.io/helpsy/
 ## O que dá para fazer
 - **Aluno:** criar conta (com dados do responsável para menores), entrar/sair, buscar psicólogos por nome, tema, modalidade e período, agendar, remarcar, cancelar, adicionar a consulta ao Google Agenda ou ao celular (.ics), ver avisos, editar conta, baixar ou excluir seus dados.
 - **Psicólogo:** ver consultas futuras e observações do aluno, marcar como realizada/falta, bloquear e liberar horários.
-- **Painel administrativo separado** (`admin.html`, link "Área administrativa" no rodapé): visão geral com gráficos, aprovar/recusar cadastros definindo a agenda inicial, suspender/reativar profissionais, ver e cancelar consultas, lista de alunos, avisos, registro de ações e exportação em CSV.
+- **Painel administrativo separado** (`admin.html`, acessado só pelo endereço direto — não há link no site): visão geral com gráficos, aprovar/recusar cadastros definindo a agenda inicial, suspender/reativar profissionais, ver e cancelar consultas, lista de alunos, avisos, registro de ações e exportação em CSV.
   Acesso de demonstração: `admin@helpsy.com` / `helpsy2026`.
 - **Assistente virtual:** sugere profissionais com horários clicáveis e orienta para CVV (188) / SAMU (192) em situações de crise.
 - Funciona como app (pode ser instalado no celular) e abre mesmo sem internet.
