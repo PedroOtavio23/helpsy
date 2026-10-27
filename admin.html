@@ -148,11 +148,13 @@
   /* ---------- Seções ---------- */
   const SECTIONS = [
     ["geral", "Visão geral"], ["pendentes", "Cadastros pendentes"], ["profissionais", "Profissionais"],
-    ["consultas", "Consultas"], ["alunos", "Alunos"], ["avisos", "Avisos"], ["registro", "Registro de ações"]
+    ["assinaturas", "Planos e receita"], ["pagamentos", "Pagamentos"], ["consultas", "Consultas"], ["alunos", "Pacientes"], ["avisos", "Avisos"], ["registro", "Registro de ações"]
   ];
   const adminNotes = () => db.notifications.filter((n) => n.to === "admin");
   function counts() { return { pendentes: db.pending.length, avisos: adminNotes().filter((n) => !n.read).length }; }
 
+  const brl = H.brl;
+  const thisMonth = new Date().toISOString().slice(0, 7);
   const views = {};
   views.geral = () => {
     const b = db.bookings;
@@ -165,22 +167,25 @@
     return `<div class="row between"><div><h1>Visão geral</h1><p class="muted">Dados de demonstração salvos neste navegador.</p></div>${btn("Atualizar","refresh",{},"btn secondary sm")}</div>
       ${db.pending.length ? `<div class="notice warn row between"><span><strong>${db.pending.length}</strong> cadastro(s) profissional(is) aguardando análise.</span>${btn("Analisar agora","tab",{tab:"pendentes"},"btn sm")}</div>` : ""}
       <div class="kpis">
-        <div class="card kpi"><b>${db.users.length}</b><span class="muted">alunos cadastrados</span></div>
+        <div class="card kpi"><b>${brl(H.mrr(db).total)}</b><span class="muted">receita mensal estimada</span></div>
+        <div class="card kpi"><b>${db.users.length}</b><span class="muted">pacientes</span></div>
+        <div class="card kpi"><b>${db.users.filter((u) => H.patientPlan(u.plan).price > 0).length}</b><span class="muted">pacientes pagantes</span></div>
         <div class="card kpi"><b>${pros.filter((p) => !isHidden(p)).length}</b><span class="muted">profissionais ativos</span></div>
         <div class="card kpi"><b>${b.filter((x) => x.status === "confirmada").length}</b><span class="muted">consultas confirmadas</span></div>
         <div class="card kpi"><b>${b.filter((x) => x.status === "realizada").length}</b><span class="muted">realizadas</span></div>
         <div class="card kpi"><b>${b.filter((x) => x.status === "cancelada").length}</b><span class="muted">cancelamentos</span></div>
       </div>
       <div class="grid2">
-        <section class="card stack"><h2>Consultas por profissional</h2>${b.length ? `<div class="bars">${per.map(([p, n]) => `<div class="bar"><span class="lbl" title="${e(proName(p))}">${e(proName(p))}</span><div><span style="width:${(n / max) * 100}%"></span></div><b>${n}</b></div>`).join("")}</div>` : empty("Ainda não há consultas de alunos.")}</section>
+        <section class="card stack"><h2>Consultas por profissional</h2>${b.length ? `<div class="bars">${per.map(([p, n]) => `<div class="bar"><span class="lbl" title="${e(proName(p))}">${e(proName(p))}</span><div><span style="width:${(n / max) * 100}%"></span></div><b>${n}</b></div>`).join("")}</div>` : empty("Ainda não há consultas de pacientes.")}</section>
         <section class="card stack"><h2>Procura por tema</h2>${b.length ? `<div class="bars">${Object.entries(areaCount).sort((a, c) => c[1] - a[1]).map(([a, n]) => `<div class="bar"><span class="lbl" title="${e(a)}">${e(a)}</span><div><span style="width:${(n / maxA) * 100}%"></span></div><b>${n}</b></div>`).join("")}</div>` : empty("Os temas aparecem quando houver consultas.")}</section>
       </div>
       <section class="card stack"><div class="row between"><h2>Atividade recente</h2>${btn("Ver tudo","tab",{tab:"registro"},"btn secondary sm")}</div><div class="log">${db.audit.length ? db.audit.slice(-6).reverse().map((x) => `<p>${e(x)}</p>`).join("") : empty("Nenhuma ação registrada.")}</div></section>`;
   };
 
-  views.pendentes = () => `<div><h1>Cadastros pendentes</h1><p class="muted">Confira o CRP no site do Conselho antes de aprovar. Perfis aprovados aparecem no catálogo na hora.</p></div>
+  views.pendentes = () => `<div><h1>Cadastros pendentes</h1><p class="muted">Confira o CRP no site do Conselho antes de aprovar. Ao aprovar, o perfil entra no catálogo e a assinatura começa.</p></div>
     <section class="card stack">${db.pending.length ? db.pending.map((it, i) => `<article class="pending">
       <div class="row between"><div><h2>${e(it.name)}</h2><p class="small muted">${e(it.crp)} · ${e(it.email || "sem e-mail")} · enviado em ${e(it.date)}</p></div><div class="row">${btn("Aprovar","approve",{index:i},"btn sm")}${btn("Recusar","reject",{index:i},"btn danger sm")}</div></div>
+      <p class="small"><strong>Plano escolhido:</strong> ${e(H.proPlan(it.plan).name)} (${brl(H.proPlan(it.plan).price)}/mês)</p>
       <p class="small"><strong>Formação:</strong> ${e(it.training)}${it.modes && it.modes.length ? ` · <strong>Modalidade:</strong> ${it.modes.map(modeLabel).join(" e ")}` : ""}</p>
       <div>${(it.areas || []).map((a) => `<span class="chip">${e(a)}</span>`).join("")}</div>
       ${it.bio ? `<p class="small muted">${e(it.bio)}</p>` : ""}
@@ -191,10 +196,10 @@
     const list = allPros().filter((p) => !q || `${p.name} ${p.crp} ${p.areas.join(" ")}`.toLowerCase().includes(q));
     return `<div class="row between"><div><h1>Profissionais</h1><p class="muted">Suspenda um perfil para tirá-lo do catálogo sem apagar o histórico.</p></div>${btn("Exportar CSV","export-pros",{},"btn secondary sm")}</div>
       <div class="card filters"><div class="field"><label for="proQ">Buscar</label><input id="proQ" type="search" value="${e(ui.proQ)}" placeholder="Nome, CRP ou tema"></div></div>
-      <section class="card table-wrap">${list.length ? `<table><thead><tr><th>Profissional</th><th>Temas</th><th>Modalidade</th><th>Consultas</th><th>Status</th><th></th></tr></thead><tbody>${list.map((p) => {
+      <section class="card table-wrap">${list.length ? `<table><thead><tr><th>Profissional</th><th>Plano</th><th>Temas</th><th>Modalidade</th><th>Consultas</th><th>Status</th><th></th></tr></thead><tbody>${list.map((p) => {
         const n = db.bookings.filter((b) => b.professionalId === p.id && b.status === "confirmada").length;
         const hid = isHidden(p);
-        return `<tr><td><strong>${e(proName(p))}</strong><br><span class="small muted">${e(p.crp)}</span></td><td>${p.areas.map((a) => `<span class="chip">${e(a)}</span>`).join("")}</td><td>${p.modes.map(modeLabel).join(", ")}</td><td>${n}</td><td>${statusTag(hid ? "suspenso" : "ativo")}</td><td>${hid ? btn("Reativar","toggle-pro",{id:p.id},"btn secondary sm") : btn("Suspender","toggle-pro",{id:p.id},"btn danger sm")}</td></tr>`;
+        return `<tr><td><strong>${e(proName(p))}</strong><br><span class="small muted">${e(p.crp)}</span></td><td>${e(H.proPlan(p.plan).name.replace("Psicólogo ",""))}<br><span class="small muted">${brl(H.proPlan(p.plan).price)}/mês</span></td><td>${p.areas.map((a) => `<span class="chip">${e(a)}</span>`).join("")}</td><td>${p.modes.map(modeLabel).join(", ")}</td><td>${n}</td><td>${statusTag(hid ? "suspenso" : "ativo")}</td><td>${hid ? btn("Reativar","toggle-pro",{id:p.id},"btn secondary sm") : btn("Suspender","toggle-pro",{id:p.id},"btn danger sm")}</td></tr>`;
       }).join("")}</tbody></table>` : empty("Nenhum profissional encontrado.")}</section>`;
   };
 
@@ -206,25 +211,47 @@
   }
   views.consultas = () => {
     const list = filteredBookings();
-    return `<div class="row between"><div><h1>Consultas</h1><p class="muted">Todas as consultas agendadas por alunos no site.</p></div>${btn("Exportar CSV","export-bookings",{},"btn secondary sm")}</div>
+    return `<div class="row between"><div><h1>Consultas</h1><p class="muted">Todas as consultas agendadas por pacientes. Cancelar pelo painel devolve a consulta ao saldo do paciente.</p></div>${btn("Exportar CSV","export-bookings",{},"btn secondary sm")}</div>
       <div class="card filters">
-        <div class="field"><label for="bq">Buscar</label><input id="bq" type="search" value="${e(ui.q)}" placeholder="Aluno ou profissional"></div>
+        <div class="field"><label for="bq">Buscar</label><input id="bq" type="search" value="${e(ui.q)}" placeholder="Paciente ou profissional"></div>
         <div class="field"><label for="bs">Status</label><select id="bs"><option value="">Todos</option>${["confirmada","realizada","falta","remarcada","cancelada"].map((s) => `<option ${ui.status === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
         <div class="field"><label for="bp">Profissional</label><select id="bp"><option value="">Todos</option>${allPros().map((p) => `<option value="${p.id}" ${Number(ui.pro) === p.id ? "selected" : ""}>${e(proName(p))}</option>`).join("")}</select></div>
       </div>
       <p class="small muted" aria-live="polite">${list.length} consulta(s)</p>
-      <section class="card table-wrap">${list.length ? `<table><thead><tr><th>Data</th><th>Aluno</th><th>Profissional</th><th>Modalidade</th><th>Status</th><th></th></tr></thead><tbody>${list.map((b) => `<tr><td>${e(dateLabel(b.date))}<br><span class="small muted">${e(b.time)}</span></td><td>${e(b.studentName)}<br><span class="small muted">${e(b.studentEmail)}</span></td><td>${e(proName(proById(b.professionalId)))}</td><td>${modeLabel(b.mode)}</td><td>${statusTag(b.status)}</td><td>${b.status === "confirmada" ? btn("Cancelar","cancel-booking",{id:b.id},"btn danger sm") : ""}</td></tr>`).join("")}</tbody></table>` : empty("Nenhuma consulta com esses filtros.")}</section>`;
+      <section class="card table-wrap">${list.length ? `<table><thead><tr><th>Data</th><th>Paciente</th><th>Profissional</th><th>Modalidade</th><th>Status</th><th></th></tr></thead><tbody>${list.map((b) => `<tr><td>${e(dateLabel(b.date))}<br><span class="small muted">${e(b.time)}</span></td><td>${e(b.studentName)}<br><span class="small muted">${e(b.studentEmail)}</span></td><td>${e(proName(proById(b.professionalId)))}</td><td>${modeLabel(b.mode)}</td><td>${statusTag(b.status === "cancelada" && b.late ? "cancelada (tardia)" : b.status)}</td><td>${b.status === "confirmada" ? btn("Cancelar","cancel-booking",{id:b.id},"btn danger sm") : ""}</td></tr>`).join("")}</tbody></table>` : empty("Nenhuma consulta com esses filtros.")}</section>`;
   };
 
   views.alunos = () => {
     const q = ui.studentQ.toLowerCase();
     const list = db.users.filter((u) => !q || `${u.name} ${u.email} ${u.school || ""}`.toLowerCase().includes(q));
-    return `<div class="row between"><div><h1>Alunos</h1><p class="muted">Somente dados de cadastro. Nenhuma informação clínica é exibida aqui.</p></div>${btn("Exportar CSV","export-students",{},"btn secondary sm")}</div>
+    return `<div class="row between"><div><h1>Pacientes</h1><p class="muted">Dados de cadastro e plano. Nenhuma informação clínica é exibida aqui.</p></div>${btn("Exportar CSV","export-students",{},"btn secondary sm")}</div>
       <div class="card filters"><div class="field"><label for="sq">Buscar</label><input id="sq" type="search" value="${e(ui.studentQ)}" placeholder="Nome, e-mail ou escola"></div></div>
-      <section class="card table-wrap">${list.length ? `<table><thead><tr><th>Aluno</th><th>Escola</th><th>Idade</th><th>Responsável</th><th>Consultas</th><th>Cadastro</th></tr></thead><tbody>${list.map((u) => {
-        const age = ageOf(u.birth); const n = db.bookings.filter((b) => b.studentEmail === u.email && b.status !== "cancelada").length;
-        return `<tr><td><strong>${e(u.name)}</strong><br><span class="small muted">${e(u.email)}</span></td><td>${e(u.school || "—")}</td><td>${age ?? "—"}</td><td>${u.guardian ? `${e(u.guardian.name)}<br><span class="small muted">${e(u.guardian.email)}</span>` : "—"}</td><td>${n}</td><td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString("pt-BR") : "—"}</td></tr>`;
-      }).join("")}</tbody></table>` : empty(db.users.length ? "Nenhum aluno encontrado." : "Nenhum aluno cadastrado ainda. Os cadastros feitos no site aparecem aqui.")}</section>`;
+      <section class="card table-wrap">${list.length ? `<table><thead><tr><th>Paciente</th><th>Plano</th><th>Uso no mês</th><th>Idade</th><th>Responsável</th><th>Cadastro</th></tr></thead><tbody>${list.map((u) => {
+        const age = ageOf(u.birth); const pl = H.patientPlan(u.plan); const used = H.usedInMonth(db, u.email, thisMonth);
+        return `<tr><td><strong>${e(u.name)}</strong><br><span class="small muted">${e(u.email)}${u.school ? " · " + e(u.school) : ""}</span></td><td>${e(pl.name.replace("Helpsy ",""))}<br><span class="small muted">${pl.price ? brl(pl.price) + "/mês" : "grátis"}</span></td><td>${used} de ${pl.quota}</td><td>${age ?? "—"}</td><td>${u.guardian ? `${e(u.guardian.name)}<br><span class="small muted">${e(u.guardian.email)}</span>` : "—"}</td><td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString("pt-BR") : "—"}</td></tr>`;
+      }).join("")}</tbody></table>` : empty(db.users.length ? "Nenhum paciente encontrado." : "Nenhum paciente cadastrado ainda. Os cadastros feitos no site aparecem aqui.")}</section>`;
+  };
+
+  views.assinaturas = () => {
+    const m = H.mrr(db);
+    const pros = allPros().filter((p) => !isHidden(p));
+    const pRows = H.PATIENT_PLANS.map((pl) => { const n = db.users.filter((u) => (u.plan || "free") === pl.id).length; return [pl, n, n * pl.price]; });
+    const sRows = H.PRO_PLANS.map((pl) => { const n = pros.filter((p) => p.plan === pl.id).length; return [pl, n, n * pl.price]; });
+    const maxP = Math.max(1, ...pRows.map((r) => r[1]));
+    return `<div><h1>Planos e receita</h1><p class="muted">Receita recorrente estimada a partir das assinaturas ativas (valores de demonstração).</p></div>
+      <div class="kpis"><div class="card kpi"><b>${brl(m.total)}</b><span class="muted">receita mensal total</span></div><div class="card kpi"><b>${brl(m.patients)}</b><span class="muted">de pacientes</span></div><div class="card kpi"><b>${brl(m.pros)}</b><span class="muted">de psicólogos</span></div></div>
+      <div class="grid2">
+        <section class="card stack"><h2>Pacientes por plano</h2><div class="bars">${pRows.map(([pl, n]) => `<div class="bar"><span class="lbl">${e(pl.name.replace("Helpsy ",""))}</span><div><span style="width:${(n / maxP) * 100}%"></span></div><b>${n}</b></div>`).join("")}</div>
+          <div class="table-wrap"><table><thead><tr><th>Plano</th><th>Consultas</th><th>Preço</th><th>Receita</th></tr></thead><tbody>${pRows.map(([pl, n, r]) => `<tr><td>${e(pl.name)}</td><td>${pl.quota}/mês</td><td>${brl(pl.price)}</td><td>${brl(r)}</td></tr>`).join("")}</tbody></table></div></section>
+        <section class="card stack"><h2>Psicólogos por plano</h2><div class="table-wrap"><table><thead><tr><th>Plano</th><th>Ativos</th><th>Preço</th><th>Receita</th></tr></thead><tbody>${sRows.map(([pl, n, r]) => `<tr><td>${e(pl.name)}</td><td>${n}</td><td>${brl(pl.price)}</td><td>${brl(r)}</td></tr>`).join("")}</tbody></table></div>
+          <p class="notice warn small"><strong>Atenção à viabilidade:</strong> o Premium Plus (24 consultas por ${brl(199.90)}) rende cerca de ${brl(199.90 / 24)} por consulta se todas forem usadas, e as consultas do plano Free também têm custo. Antes de lançar de verdade, é preciso definir como os psicólogos serão remunerados por consulta.</p></section>
+      </div>`;
+  };
+  views.pagamentos = () => {
+    const list = (db.payments || []);
+    const nameOf = (x) => x.type === "psicologo" ? proName(proById(String(x.who).replace("psi:", ""))) : ((db.users.find((u) => u.email === x.who) || {}).name || x.who);
+    return `<div class="row between"><div><h1>Pagamentos</h1><p class="muted">Pagamentos simulados de assinaturas e trocas de plano. Nenhuma cobrança real é feita.</p></div>${list.length ? btn("Exportar CSV","export-payments",{},"btn secondary sm") : ""}</div>
+      <section class="card table-wrap">${list.length ? `<table><thead><tr><th>Data</th><th>Quem</th><th>Tipo</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead><tbody>${list.map((x) => `<tr><td>${new Date(x.at).toLocaleString("pt-BR")}</td><td>${e(nameOf(x))}</td><td>${x.type === "psicologo" ? "Psicólogo" : "Paciente"}</td><td>${e(x.planName)}</td><td>${brl(x.amount)}</td><td>${e(x.status)}</td></tr>`).join("")}</tbody></table>` : empty("Nenhum pagamento ainda. Assinaturas pagas feitas no site aparecem aqui.")}</section>`;
   };
 
   views.avisos = () => {
@@ -279,7 +306,10 @@
           const idx = db.pending.indexOf(it); if (idx < 0) return;
           db.pending.splice(idx, 1);
           const id = Math.max(...allPros().map((p) => p.id)) + 1;
-          db.extraPros.push({ id, title: "Psi.", name: it.name, crp: it.crp, training: it.training, areas: it.areas && it.areas.length ? it.areas : ["Estresse escolar"], modes: it.modes && it.modes.length ? it.modes : ["online"], location: "", bio: it.bio || "Perfil recém-aprovado.", days: daysSel, times });
+          db.extraPros.push({ id, title: "Psi.", name: it.name, crp: it.crp, training: it.training, areas: it.areas && it.areas.length ? it.areas : ["Estresse escolar"], modes: it.modes && it.modes.length ? it.modes : ["online"], location: "", bio: it.bio || "Perfil recém-aprovado.", days: daysSel, times, plan: H.proPlan(it.plan).id, since: new Date().toISOString().slice(0, 10) });
+          const pl = H.proPlan(it.plan);
+          db.payments = db.payments || []; db.payments.unshift({ id: `pg-${db.nextId++}`, who: "psi:" + id, type: "psicologo", plan: pl.id, planName: pl.name, amount: pl.price, at: new Date().toISOString(), status: "aprovado (simulado)" });
+          notify("psi:" + id, `Seu perfil foi aprovado! Assinatura ${pl.name} ativa (${brl(pl.price)}/mês).`);
           log(`Cadastro de ${it.name} aprovado.`); save(); render(); toast("Aprovado — o perfil já aparece no catálogo.");
         });
         break;
@@ -314,11 +344,13 @@
       }
       case "read-all": adminNotes().forEach((n) => { n.read = true; }); save(); render(); break;
       case "export-bookings":
-        download("consultas-helpsy.csv", csv([["Data","Horário","Aluno","E-mail","Profissional","Modalidade","Status"]].concat(filteredBookings().map((b) => [b.date, b.time, b.studentName, b.studentEmail, proName(proById(b.professionalId)), modeLabel(b.mode), b.status]))), "text/csv"); break;
+        download("consultas-helpsy.csv", csv([["Data","Horário","Paciente","E-mail","Profissional","Modalidade","Status"]].concat(filteredBookings().map((b) => [b.date, b.time, b.studentName, b.studentEmail, proName(proById(b.professionalId)), modeLabel(b.mode), b.status]))), "text/csv"); break;
       case "export-students":
-        download("alunos-helpsy.csv", csv([["Nome","E-mail","Escola","Nascimento","Responsável","E-mail do responsável","Cadastro"]].concat(db.users.map((u) => [u.name, u.email, u.school, u.birth, u.guardian && u.guardian.name, u.guardian && u.guardian.email, u.createdAt]))), "text/csv"); break;
+        download("pacientes-helpsy.csv", csv([["Nome","E-mail","Plano","Consultas/mês","Escola","Nascimento","Responsável","E-mail do responsável","Cadastro"]].concat(db.users.map((u) => [u.name, u.email, H.patientPlan(u.plan).name, H.patientPlan(u.plan).quota, u.school, u.birth, u.guardian && u.guardian.name, u.guardian && u.guardian.email, u.createdAt]))), "text/csv"); break;
       case "export-pros":
-        download("profissionais-helpsy.csv", csv([["Nome","CRP","Formação","Temas","Modalidade","Status"]].concat(allPros().map((p) => [proName(p), p.crp, p.training, p.areas.join(", "), p.modes.map(modeLabel).join(", "), isHidden(p) ? "suspenso" : "ativo"]))), "text/csv"); break;
+        download("profissionais-helpsy.csv", csv([["Nome","CRP","Plano","Mensalidade","Formação","Temas","Modalidade","Status"]].concat(allPros().map((p) => [proName(p), p.crp, H.proPlan(p.plan).name, H.proPlan(p.plan).price.toFixed(2).replace(".", ","), p.training, p.areas.join(", "), p.modes.map(modeLabel).join(", "), isHidden(p) ? "suspenso" : "ativo"]))), "text/csv"); break;
+      case "export-payments":
+        download("pagamentos-helpsy.csv", csv([["Data","Quem","Tipo","Plano","Valor","Status"]].concat((db.payments || []).map((x) => [x.at, x.who, x.type, x.planName, x.amount.toFixed(2).replace(".", ","), x.status]))), "text/csv"); break;
       case "export-log": download("registro-helpsy.txt", db.audit.join("\n"), "text/plain"); break;
     }
   });
