@@ -53,14 +53,12 @@
     .status.realizada { background: #e6ecfb; color: #2b3f8f; }
     .status.remarcada { background: var(--warning-soft); color: #6b4c00; }
 
-    /* Login */
-    .login { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--brand); }
-    .login .card { width: min(420px, 100%); padding: 26px; }
-    .login img { width: 170px; margin: 0 auto 6px; display: block; }
+    .demo-bar { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: var(--sun); color: #3b2b00; padding: 6px 16px; font-size: .85rem; }
+    .demo-bar a { color: inherit; font-weight: 700; }
 
     /* Layout do painel */
-    .shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100dvh; }
-    .side { background: var(--accent-strong); color: #fff; padding: 20px 14px; display: flex; flex-direction: column; gap: 18px; position: sticky; top: 0; height: 100dvh; }
+    .shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: calc(100dvh - 34px); }
+    .side { background: var(--accent-strong); color: #fff; padding: 20px 14px; display: flex; flex-direction: column; gap: 18px; position: sticky; top: 0; height: calc(100dvh - 34px); }
     .side .brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
     .side .brand img { width: 74px; }
     .side .brand b { font: 700 1.1rem var(--display); display: block; }
@@ -106,6 +104,7 @@
   </style>
 </head>
 <body>
+  <div class="demo-bar"><span><strong>Modo demonstração</strong> — painel do administrador</span><a href="./">Voltar ao site</a></div>
   <div id="root"></div>
   <div id="toastRoot" aria-live="polite"></div>
   <dialog id="dlg"></dialog>
@@ -115,9 +114,6 @@
 (() => {
   "use strict";
   const H = window.Helpsy;
-  // Acesso de demonstração (protótipo sem servidor). Num sistema real, o login do admin fica no servidor.
-  const ADMIN = { email: "admin@helpsy.com", pass: "helpsy2026" };
-  const ADMIN_SESSION = "helpsy:admin-session";
 
   let db = H.load();
   const ui = { tab: "geral", q: "", status: "", pro: "", proQ: "", studentQ: "" };
@@ -139,8 +135,6 @@
   const btn = (label, action, data = {}, cls = "btn") => `<button type="button" class="${cls}" data-action="${action}" ${Object.entries(data).map(([k,v]) => `data-${k}="${e(v)}"`).join(" ")}>${label}</button>`;
   const empty = (t) => `<p class="empty">${t}</p>`;
 
-  function loggedIn() { try { return sessionStorage.getItem(ADMIN_SESSION) === "1"; } catch (err) { return window.__adm === true; } }
-  function setLogged(v) { try { v ? sessionStorage.setItem(ADMIN_SESSION, "1") : sessionStorage.removeItem(ADMIN_SESSION); } catch (err) { window.__adm = v; } }
 
   let toastTimer;
   function toast(m) { $("#toastRoot").innerHTML = `<div class="toast" role="status">${e(m)}</div>`; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("#toastRoot").innerHTML = ""; }, 3000); }
@@ -150,20 +144,6 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   const csv = (rows) => "﻿" + rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
-
-  /* ---------- Login ---------- */
-  function loginView() {
-    return `<div class="login"><form class="card stack" id="loginForm" novalidate>
-      <img src="assets/logo-verde.png" alt="Helpsy — Psicologia Escolar">
-      <div style="text-align:center"><h1 style="font-size:1.5rem">Painel administrativo</h1><p class="muted small">Acesso restrito à equipe Helpsy</p></div>
-      <div class="field"><label for="admEmail">E-mail</label><input id="admEmail" type="email" autocomplete="username" required></div>
-      <div class="field"><label for="admPass">Senha</label><input id="admPass" type="password" autocomplete="current-password" required></div>
-      <p id="admErr" class="notice error" role="alert" hidden></p>
-      <button class="btn" type="submit">Entrar</button>
-      <p class="notice warn small">Protótipo: use <strong>admin@helpsy.com</strong> e a senha <strong>helpsy2026</strong>. Em produção, este acesso precisa ser validado em servidor.</p>
-      <a class="small" href="./" style="text-align:center">← Voltar ao site</a>
-    </form></div>`;
-  }
 
   /* ---------- Seções ---------- */
   const SECTIONS = [
@@ -259,14 +239,13 @@
   /* ---------- Render ---------- */
   function render() {
     const root = $("#root");
-    if (!loggedIn()) { document.title = "Entrar · Painel Helpsy"; root.innerHTML = loginView(); $("#admEmail").focus(); return; }
     const c = counts();
     const active = document.activeElement && document.activeElement.id;
     root.innerHTML = `<div class="shell">
       <aside class="side">
         <a class="brand" href="./" style="color:#fff;text-decoration:none"><img src="assets/marca-branca.png" alt=""><span><b>HELPSY</b><small>ADMINISTRAÇÃO</small></span></a>
         <nav class="menu" aria-label="Seções do painel">${SECTIONS.map(([id, l]) => `<button data-action="tab" data-tab="${id}" ${ui.tab === id ? 'aria-current="page"' : ""}><span>${l}</span>${c[id] ? `<span class="count">${c[id]}</span>` : ""}</button>`).join("")}</nav>
-        <div class="foot"><a href="./" target="_blank" rel="noopener">Abrir o site ↗</a><button data-action="logout">Sair</button></div>
+        <div class="foot"><a href="./">← Voltar ao site</a></div>
       </aside>
       <main id="main" tabindex="-1">${views[ui.tab]()}</main>
     </div>`;
@@ -287,7 +266,6 @@
     switch (action) {
       case "tab": ui.tab = d.tab; render(); window.scrollTo(0, 0); $("#main") && $("#main").focus({ preventScroll: true }); break;
       case "refresh": db = H.load(); render(); toast("Dados atualizados."); break;
-      case "logout": setLogged(false); render(); break;
       case "approve": {
         const it = db.pending[Number(d.index)]; if (!it) break;
         const days = [["1","Seg"],["2","Ter"],["3","Qua"],["4","Qui"],["5","Sex"]];
@@ -353,15 +331,8 @@
     if (ev.target.id === "bs") { ui.status = ev.target.value; render(); }
     if (ev.target.id === "bp") { ui.pro = ev.target.value; render(); }
   });
-  document.addEventListener("submit", (ev) => {
-    if (ev.target.id !== "loginForm") return;
-    ev.preventDefault();
-    const email = $("#admEmail").value.trim().toLowerCase(), pass = $("#admPass").value;
-    if (email !== ADMIN.email || pass !== ADMIN.pass) { const el = $("#admErr"); el.hidden = false; el.textContent = "E-mail ou senha incorretos."; return; }
-    setLogged(true); db = H.load(); render();
-  });
   // Mantém o painel em sincronia com o site aberto em outra aba
-  window.addEventListener("storage", (ev) => { if (ev.key === H.STORE_KEY && loggedIn() && !$("#dlg").open) { db = H.load(); render(); } });
+  window.addEventListener("storage", (ev) => { if (ev.key === H.STORE_KEY && !$("#dlg").open) { db = H.load(); render(); } });
 
   render();
 })();
